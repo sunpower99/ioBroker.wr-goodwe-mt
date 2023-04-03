@@ -1,0 +1,110 @@
+{
+	"common": {
+		"name": "wr-goodwe-mt",
+		"version": "0.0.1",
+		"news": {
+			"0.0.1": {
+				"en": "initial release",
+				"de": "Erstveröffentlichung",
+				"ru": "Начальная версия",
+				"pt": "lançamento inicial",
+				"nl": "Eerste uitgave",
+				"fr": "Première version",
+				"it": "Versione iniziale",
+				"es": "Versión inicial",
+				"pl": "Pierwsze wydanie",
+				"zh-cn": "首次出版"
+			}
+		},
+		"title": "Wechselrichter Goodwe-MT",
+		"titleLang": {
+			"en": "Wechselrichter Goodwe-MT",
+			"de": "Wechselrichter Goodwe-MT",
+			"ru": "Wechselrichter Goodwe-MT",
+			"pt": "Wechselrichter Goodwe-MT",
+			"nl": "Wechselrichter Goodwe-MT",
+			"fr": "Wechselrichter Goodwe-MT",
+			"it": "Wechselrichter Goodwe-MT",
+			"es": "Wechselrichter Goodwe-MT",
+			"pl": "Wechselrichter Goodwe-MT",
+			"zh-cn": "Wechselrichter Goodwe-MT"
+		},
+		"desc": {
+			"en": "wr-goodwe-mt",
+			"de": "wr-goodwe-mt",
+			"ru": "wr-goodwe-mt",
+			"pt": "wr-goodwe-mt",
+			"nl": "wr-goodwe-mt",
+			"fr": "wr-goodwe-mt",
+			"it": "wr-goodwe-mt",
+			"es": "wr-goodwe-mt",
+			"pl": "wr-goodwe-mt",
+			"zh-cn": "wr-goodwe-mt"
+		},
+		"authors": [
+			"sunpower99 <m.fuchs@stoiber-photovoltaik.de>"
+		],
+		"keywords": [
+			"ioBroker",
+			"template",
+			"Smart Home",
+			"home automation"
+		],
+		"license": "MIT",
+		"platform": "Javascript/Node.js",
+		"main": "build/main.js",
+		"icon": "wr-goodwe-mt.png",
+		"enabled": true,
+		"extIcon": "https://raw.githubusercontent.com/sunpower99/ioBroker.wr-goodwe-mt/main/admin/wr-goodwe-mt.png",
+		"readme": "https://github.com/sunpower99/ioBroker.wr-goodwe-mt/blob/main/README.md",
+		"loglevel": "info",
+		"mode": "daemon",
+		"type": "protocols",
+		"compact": true,
+		"connectionType": "local",
+		"dataSource": "poll",
+		"adminUI": {
+			"config": "json"
+		},
+		"eraseOnUpload": true,
+		"dependencies": [
+			{
+				"js-controller": ">=3.3.22"
+			}
+		],
+		"globalDependencies": [
+			{
+				"admin": ">=5.0.0"
+			}
+		]
+	},
+	"native": {
+        "Interface":"/dev/ttyUSB0",
+        "startID": 2,
+        "endID": 3
+    },
+	"objects": [],
+	"instanceObjects": [
+		{
+			"_id": "info",
+			"type": "channel",
+			"common": {
+				"name": "Information"
+			},
+			"native": {}
+		},
+		{
+			"_id": "info.connection",
+			"type": "state",
+			"common": {
+				"role": "indicator.connected",
+				"name": "Device or service connected",
+				"type": "boolean",
+				"read": true,
+				"write": false,
+				"def": false
+			},
+			"native": {}
+		}
+	]
+}

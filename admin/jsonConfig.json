@@ -1,0 +1,41 @@
+{
+    "type": "tabs",
+    "items": {
+        "options1": {
+            "type": "panel",
+            "label": "RS485 Settings",
+            "icon": "base64 svg",
+            "items": {
+                "Interface": {
+                    "type": "text",
+                    "label": "Interface",
+                    "sm": 12, 
+                    "validator": "data.name",
+                    "hidden": "data.myType === 1", 
+                    "disabled": "data.myType === 2" 
+                },
+                "startID": {
+                    "type": "number",
+                    "min": 1,
+                    "max": 65565,
+                    "label": "Start ID",
+                    "sm": 6, 
+                    "validator": "data.name",
+                    "hidden": "data.myType === 1", 
+                    "disabled": "data.myType === 2" 
+                },
+                "endID": {
+                    "type": "number",
+                    "min": 1,
+                    "max": 65565,
+                    "label": "End ID",
+                    "sm": 6, 
+                    "validator": "data.name",
+                    "hidden": "data.myType === 1", 
+                    "disabled": "data.myType === 2" 
+                }
+            }
+        
+        }
+    }    
+}

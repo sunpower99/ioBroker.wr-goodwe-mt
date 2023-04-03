@@ -1,0 +1,75 @@
+{
+    "Code": 3,
+    "Adresses":[
+        {
+            "Register": [768],
+            "Name": "Voltage_MPPT1",
+            "Unit": "V",
+            "Datatype": 2,
+            "Factor": 0.1
+        },
+        {
+            "Register": [769],
+            "Name": "Voltage_MPPT2",
+            "Unit": "V",
+            "Datatype": 2,
+            "Factor": 0.1
+        },
+        {
+            "Register": [855],
+            "Name": "Voltage_MPPT3",
+            "Unit": "V",
+            "Datatype": 2,
+            "Factor": 0.1
+        },
+        {
+            "Register": [856],
+            "Name": "Voltage_MPPT4",
+            "Unit": "V",
+            "Datatype": 2,
+            "Factor": 0.1
+        },
+        {
+            "Register": [770],
+            "Name": "Current_MPPT1",
+            "Unit": "A",
+            "Datatype": 2,
+            "Factor": 0.1
+        },
+        {
+            "Register": [771],
+            "Name": "Current_MPPT2",
+            "Unit": "A",
+            "Datatype": 2,
+            "Factor": 0.1
+        },
+        {
+            "Register": [857],
+            "Name": "Current_MPPT3",
+            "Unit": "A",
+            "Datatype": 2,
+            "Factor": 0.1
+        },
+        {
+            "Register": [858],
+            "Name": "Current_MPPT4",
+            "Unit": "A",
+            "Datatype": 2,
+            "Factor": 0.1
+        },
+        {
+            "Register": [781],
+            "Name": "Power",
+            "Unit": "W",
+            "Datatype": 1,
+            "Factor": 1
+        },
+        {
+            "Register": [783],
+            "Name": "Temp_Inverter",
+            "Unit": "°C",
+            "Datatype": 1,
+            "Factor": 0.1
+        }
+    ]
+}
