@@ -34,13 +34,10 @@ class WrGoodweMt extends utils.Adapter {
     this.on("unload", this.onUnload.bind(this));
   }
   async onReady() {
-    this.config.startID = 2;
-    this.config.endID = 3;
     this.ids = new Array(this.config.endID - this.config.startID + 1);
     this.log.debug("Start ID:" + String(this.config.startID));
     this.log.debug("End ID:" + String(this.config.endID));
     this.setState("info.connection", false, true);
-    7;
     for (let i = this.config.startID; i <= this.config.endID; i++) {
       this.ids[i - this.config.startID] = i;
       await this.setObjectNotExistsAsync("WR" + i, {
@@ -51,7 +48,7 @@ class WrGoodweMt extends utils.Adapter {
         native: {}
       });
     }
-    this.client.connectRTUBuffered("/dev/ttyUSB0", { baudRate: 9600, parity: "none", dataBits: 8, stopBits: 1 });
+    this.client.connectRTUBuffered(this.config.Interface, { baudRate: 9600, parity: "none", dataBits: 8, stopBits: 1 });
     await this.startComm();
     await this.client.setTimeout(1e3);
   }
@@ -62,31 +59,29 @@ class WrGoodweMt extends utils.Adapter {
       return bu.readInt16BE(0);
     } catch (e) {
       this.log.error(String(e.message));
-      this.log.info("hier2");
-      await this.sleep(200);
       return -1;
     }
   }
   async startComm() {
     const metersIdList = this.ids;
     const getMeterValue = async (id) => {
-      for (let i = 0; i < protocoll.Adresses.length; i++) {
-        this.log.info("WR" + id + "." + protocoll.Adresses[i].Name);
-        await this.setObjectNotExistsAsync("WR" + id + "." + protocoll.Adresses[i].Name, {
+      for (let i = 0; i < protocoll.Read.Adresses.length; i++) {
+        this.log.debug("WR" + id + "." + protocoll.Read.Adresses[i].Name);
+        await this.setObjectNotExistsAsync("WR" + id + "." + protocoll.Read.Adresses[i].Name, {
           type: "state",
           common: {
-            name: protocoll.Adresses[i].Name,
+            name: protocoll.Read.Adresses[i].Name,
             type: "number",
             role: "indicator",
             read: true,
-            unit: protocoll.Adresses[i].Unit,
+            unit: protocoll.Read.Adresses[i].Unit,
             write: true
           },
           native: {}
         });
         await this.client.setID(id);
-        const val = await this.read(protocoll.Adresses[i].Register[0]);
-        await this.setState("WR" + id + "." + protocoll.Adresses[i].Name, val * protocoll.Adresses[i].Factor);
+        const val = await this.read(protocoll.Read.Adresses[i].Register[0]);
+        await this.setState("WR" + id + "." + protocoll.Read.Adresses[i].Name, val * protocoll.Read.Adresses[i].Factor);
       }
       return 1;
     };
@@ -99,7 +94,7 @@ class WrGoodweMt extends utils.Adapter {
         }
         for (const meter of meters) {
           await getMeterValue(meter);
-          await this.sleep(1e3);
+          await this.sleep(100);
         }
       } catch (e) {
       } finally {
@@ -110,8 +105,11 @@ class WrGoodweMt extends utils.Adapter {
     };
     getMetersValue(metersIdList);
   }
-  onUnload(callback) {
+  async onUnload(callback) {
     try {
+      this.log.debug("vor schlie\xDFen:" + String(this.client.isOpen));
+      await this.client.close(callback);
+      this.log.debug("nach schlie\xDFen:" + String(this.client.isOpen));
       callback();
     } catch (e) {
       callback();

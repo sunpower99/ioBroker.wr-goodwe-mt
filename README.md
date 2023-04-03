@@ -10,6 +10,18 @@
 
 ## Inverter Goodwe-MT serie adapter for ioBroker
 
+protocol.json:
+* Codes:
+  * ReadHoldingRegister: 3
+  * ReadInputRegistr: 4
+  * WriteSingleRegister: 6
+  * WriteMultipleRegister: 16
+* Datatypes:
+  * 1: uint16
+  * 2: int16
+  * 3: uint32
+  * 4: int32  
+
 ### **WORK IN PROGRESS**
 * (sunpower99) initial release
 

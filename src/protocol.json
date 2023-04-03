@@ -1,4 +1,5 @@
 {
+    "Read":{
     "Code": 3,
     "Adresses":[
         {
@@ -70,6 +71,26 @@
             "Unit": "°C",
             "Datatype": 1,
             "Factor": 0.1
+        },
+        {
+            "Register": [786,787],
+            "Name": "Energy_total",
+            "Unit": "kWh",
+            "Datatype": 1,
+            "Factor": 1
         }
     ]
+},
+"Write":{
+    "Code": 16,
+    "Adresses":[
+        {
+            "Register": [256],
+            "Name": "Limitation",
+            "Unit": "%",
+            "Datatype": 2,
+            "Factor": 1
+        }
+    ]
+}
 }

@@ -1,7 +1,7 @@
 {
     "type": "tabs",
     "items": {
-        "options1": {
+        "options": {
             "type": "panel",
             "label": "RS485 Settings",
             "icon": "base64 svg",
@@ -17,7 +17,7 @@
                 "startID": {
                     "type": "number",
                     "min": 1,
-                    "max": 65565,
+                    "max": 254,
                     "label": "Start ID",
                     "sm": 6, 
                     "validator": "data.name",
@@ -27,7 +27,7 @@
                 "endID": {
                     "type": "number",
                     "min": 1,
-                    "max": 65565,
+                    "max": 254,
                     "label": "End ID",
                     "sm": 6, 
                     "validator": "data.name",
