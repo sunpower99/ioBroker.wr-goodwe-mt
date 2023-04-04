@@ -5,10 +5,12 @@
 import * as utils from '@iobroker/adapter-core';
 import ModbusRTU from 'modbus-serial';
 import * as protocoll from '/home/pi/ioBroker.wr-goodwe-mt/src/protocol.json';
+import { inherits } from 'util';
 
 class WrGoodweMt extends utils.Adapter {
     private client = new ModbusRTU();
     private ids: number[] = [];
+    private iList = new Map<number,string>();
 
     private sleep = (ms:any) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -28,47 +30,48 @@ class WrGoodweMt extends utils.Adapter {
         this.log.debug("End ID:" + String(this.config.endID));
         this.setState('info.connection', false, true);
 
-        for(let i =this.config.startID; i <=this.config.endID; i++){
-            this.ids[i-this.config.startID] = i;
-
-
-            await this.setObjectNotExistsAsync('WR'+i, {
-                type: 'channel',
-                common: {
-                    name: 'WR'+i,
-                },
-                native: {},
-            });
-        }
-
         this.client.connectRTUBuffered(this.config.Interface, { baudRate: 9600 , parity: 'none', dataBits: 8, stopBits: 1, });
-        await this.startComm();
         await this.client.setTimeout(1000);
+        await this.sleep(2000);
+        for(var i = this.config.startID; i <=this.config.endID; i++){
+            this.ids[i-this.config.startID] = i;
+            try{
+                await this.client.setID(i);
+                const val =  await this.client.readHoldingRegisters(512, 7);
+                this.log.error(String(val.buffer));
+                this.iList.set(i,String(val.buffer));
+                if(val.buffer!=undefined){
+                    await this.setObjectNotExistsAsync(String(this.iList.get(i)), {
+                        type: 'channel',
+                        common: {
+                        name: String(this.iList.get(i)),
+                        },
+                        native: {},
+                    });
+            }
+            } catch(e: any){
+                this.log.error("ID: "+i+": "+String(e.message));
+            }
+        }
+        await this.startComm();
     }
 
     private conversionUint32(arr: number[]): number{
-       /* var highbyte = arr[0];
-        var lowbyte = arr[1];
-        this.log.info(String(highbyte));
-        this.log.info(String(lowbyte));
-        //lowbyte = highbyte << 16;
-        this.log.info(String(lowbyte));
-        this.log.info(String(highbyte | lowbyte));
-        return Buffer.from([highbyte,lowbyte]).readUint32BE(0);*/
-
-        this.log.info(String(arr));
-        //let bytes = [0, 6, 163, 31];
-        let bytes = arr;
-        let uint8bytes = Uint8Array.from(bytes);
+        let uint8bytes = Uint8Array.from(arr);
         let dataview = new DataView(uint8bytes.buffer);
-       // let int32le = dataview.getInt32(0, true); // second parameter truethy == want little endian
-       this.log.info(String(dataview.getUint32(0)))
         return  dataview.getUint32(0);
+    }
+
+    private conversionInt32(arr: number[]): number{
+        let uint8bytes = Uint8Array.from(arr);
+        let dataview = new DataView(uint8bytes.buffer);
+        return  dataview.getInt32(0);
     }
 
     private async read(register: number [], adressPosition: number):Promise<number>{
         try{
             var puffer: number [] = [];
+            var sn: Uint8Array [] = [];
 
             for(var i = 0; i < register.length; i++){
                 const val =  await this.client.readHoldingRegisters(register[i], 1);
@@ -76,7 +79,7 @@ class WrGoodweMt extends utils.Adapter {
                     case 1: puffer[i] = Buffer.from([val.buffer[0],val.buffer[1]]).readUint16BE(0); break;
                     case 2: puffer[i] = Buffer.from([val.buffer[0],val.buffer[1]]).readInt16BE(0);break;
                     case 3: puffer[2*i] =  Buffer.from([(val.buffer[0])]).readUInt8(); puffer[2*i+1] =  Buffer.from([(val.buffer[1])]).readUInt8(); break; 
-                    case 4: puffer[i] =  Buffer.from([val.buffer[0],val.buffer[1]]).readInt16BE(0); break;
+                    case 4: puffer[2*i] =  Buffer.from([(val.buffer[0])]).readUInt8(); puffer[2*i+1] =  Buffer.from([(val.buffer[1])]).readUInt8(); break;
                     default: this.log.error("Not found"); break;
                 }
             }
@@ -84,38 +87,40 @@ class WrGoodweMt extends utils.Adapter {
                 case 1: return puffer[0];
                 case 2: return puffer[0];
                 case 3: return this.conversionUint32(puffer); 
-                case 4: return this.conversionUint32(puffer);
+                case 4: return this.conversionInt32(puffer);
                 default: this.log.error("Not found"); return -1000;
             }            
         }
         catch(e: any){
-           // this.log.error(String(e.message));
+            this.log.error(String(e.message));
             return -1;
         }
     }
 
     private async startComm():Promise<void>{
         const metersIdList = this.ids;
+
         const getMeterValue = async (id:number) => {
 
-            for(let i = 0; i < protocoll.Read.Adresses.length; i++){
-                this.log.debug('WR'+id+'.'+protocoll.Read.Adresses[i].Name);
-
-                await this.setObjectNotExistsAsync('WR'+id+'.'+protocoll.Read.Adresses[i].Name, {
-                    type: 'state',
-                    common: {
-                        name: protocoll.Read.Adresses[i].Name,
-                        type: 'number',
-                        role: 'indicator',
-                        read: true,
-                        unit: protocoll.Read.Adresses[i].Unit,
-                        write: true,
-                    },
-                    native: {},
-                });
-                await this.client.setID(id);
-                const val = await this.read(protocoll.Read.Adresses[i].Register, i);
-                await this.setState('WR'+id+'.'+protocoll.Read.Adresses[i].Name, val*protocoll.Read.Adresses[i].Factor);
+            for(let i = 1; i < protocoll.Read.Adresses.length; i++){
+                //this.log.debug('WR'+id+'.'+protocoll.Read.Adresses[i].Name);
+                if(this.iList.get(id)!= undefined){
+                    await this.setObjectNotExistsAsync(this.iList.get(id)+'.'+protocoll.Read.Adresses[i].Name, {
+                        type: 'state',
+                        common: {
+                            name: protocoll.Read.Adresses[i].Name,
+                            type: 'number',
+                            role: 'indicator',
+                            read: true,
+                            unit: protocoll.Read.Adresses[i].Unit,
+                            write: true,
+                        },
+                        native: {},
+                    });
+                    await this.client.setID(id);
+                    const val = await this.read(protocoll.Read.Adresses[i].Register, i);
+                    await this.setState(String(this.iList.get(id))+'.'+protocoll.Read.Adresses[i].Name, val*protocoll.Read.Adresses[i].Factor);
+                }
             }
             return 1;
         }

@@ -3,6 +3,13 @@
     "Code": 3,
     "Adresses":[
         {
+            "Register": [512,513,514,515,516,517,518,519],
+            "Name": "SN",
+            "Unit": "",
+            "Datatype": 5,
+            "Factor": 1
+        },
+        {
             "Register": [768],
             "Name": "Voltage_MPPT1",
             "Unit": "V",
