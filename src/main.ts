@@ -37,7 +37,7 @@ class WrGoodweMt extends utils.Adapter {
             this.ids[i-this.config.startID] = i;
             try{
                 await this.client.setID(i);
-                const val =  await this.client.readHoldingRegisters(512, 7);
+                const val =  await this.client.readHoldingRegisters(protocoll.Read.Adresses[0].Register[0], protocoll.Read.Adresses[0].Register.length);
                 this.log.error(String(val.buffer));
                 this.iList.set(i,String(val.buffer));
                 if(val.buffer!=undefined){
@@ -54,6 +54,19 @@ class WrGoodweMt extends utils.Adapter {
             }
         }
         await this.startComm();
+
+        await this.setObjectNotExistsAsync('Limitation', {
+            type: 'state',
+            common: {
+                name: 'Limitation',
+                type: 'number',
+                role: 'indicator',
+                read: true,
+                unit: '%',
+                write: true,
+            },
+            native: {},
+        });
     }
 
     private conversionUint32(arr: number[]): number{
@@ -71,7 +84,6 @@ class WrGoodweMt extends utils.Adapter {
     private async read(register: number [], adressPosition: number):Promise<number>{
         try{
             var puffer: number [] = [];
-            var sn: Uint8Array [] = [];
 
             for(var i = 0; i < register.length; i++){
                 const val =  await this.client.readHoldingRegisters(register[i], 1);
@@ -88,7 +100,7 @@ class WrGoodweMt extends utils.Adapter {
                 case 2: return puffer[0];
                 case 3: return this.conversionUint32(puffer); 
                 case 4: return this.conversionInt32(puffer);
-                default: this.log.error("Not found"); return -1000;
+                default: this.log.error("Not found"); return -1;
             }            
         }
         catch(e: any){
@@ -99,11 +111,9 @@ class WrGoodweMt extends utils.Adapter {
 
     private async startComm():Promise<void>{
         const metersIdList = this.ids;
-
         const getMeterValue = async (id:number) => {
-
+            //await this.sleep(100);
             for(let i = 1; i < protocoll.Read.Adresses.length; i++){
-                //this.log.debug('WR'+id+'.'+protocoll.Read.Adresses[i].Name);
                 if(this.iList.get(id)!= undefined){
                     await this.setObjectNotExistsAsync(this.iList.get(id)+'.'+protocoll.Read.Adresses[i].Name, {
                         type: 'state',
@@ -122,7 +132,7 @@ class WrGoodweMt extends utils.Adapter {
                     await this.setState(String(this.iList.get(id))+'.'+protocoll.Read.Adresses[i].Name, val*protocoll.Read.Adresses[i].Factor);
                 }
             }
-            return 1;
+            await this.limitPower();
         }
 
         const getMetersValue = async (meters:any) => {
@@ -135,7 +145,6 @@ class WrGoodweMt extends utils.Adapter {
                 }
                 for(const meter of meters) {
                     await getMeterValue(meter);
-                    await this.sleep(100);
                 }
             } catch(e: any){
             } finally {
@@ -145,6 +154,21 @@ class WrGoodweMt extends utils.Adapter {
             }
         }
         getMetersValue(metersIdList);
+    }
+
+    private async limitPower(): Promise<void> {
+        
+        this.getState('Limitation',  async (err, state) => {
+            if(typeof state?.val === 'number'){
+                try{
+                    await this.client.writeRegisters(protocoll.Write.Adresses[0].Register[0],[state?.val]);
+                }
+                catch(e:any){
+
+                }
+            }
+        });
+        await this.sleep(1000);
     }
 
     private async onUnload(callback: () => void): Promise<void> {
