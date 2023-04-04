@@ -46,14 +46,50 @@ class WrGoodweMt extends utils.Adapter {
         await this.client.setTimeout(1000);
     }
 
-    private async read(register: number):Promise<number>{
+    private conversionUint32(arr: number[]): number{
+       /* var highbyte = arr[0];
+        var lowbyte = arr[1];
+        this.log.info(String(highbyte));
+        this.log.info(String(lowbyte));
+        //lowbyte = highbyte << 16;
+        this.log.info(String(lowbyte));
+        this.log.info(String(highbyte | lowbyte));
+        return Buffer.from([highbyte,lowbyte]).readUint32BE(0);*/
+
+        this.log.info(String(arr));
+        //let bytes = [0, 6, 163, 31];
+        let bytes = arr;
+        let uint8bytes = Uint8Array.from(bytes);
+        let dataview = new DataView(uint8bytes.buffer);
+       // let int32le = dataview.getInt32(0, true); // second parameter truethy == want little endian
+       this.log.info(String(dataview.getUint32(0)))
+        return  dataview.getUint32(0);
+    }
+
+    private async read(register: number [], adressPosition: number):Promise<number>{
         try{
-            const val =  await this.client.readHoldingRegisters(register, 1);
-            const bu = Buffer.from([val.buffer[0],val.buffer[1]]);
-            return bu.readInt16BE(0);
+            var puffer: number [] = [];
+
+            for(var i = 0; i < register.length; i++){
+                const val =  await this.client.readHoldingRegisters(register[i], 1);
+                switch(protocoll.Read.Adresses[adressPosition].Datatype){
+                    case 1: puffer[i] = Buffer.from([val.buffer[0],val.buffer[1]]).readUint16BE(0); break;
+                    case 2: puffer[i] = Buffer.from([val.buffer[0],val.buffer[1]]).readInt16BE(0);break;
+                    case 3: puffer[2*i] =  Buffer.from([(val.buffer[0])]).readUInt8(); puffer[2*i+1] =  Buffer.from([(val.buffer[1])]).readUInt8(); break; 
+                    case 4: puffer[i] =  Buffer.from([val.buffer[0],val.buffer[1]]).readInt16BE(0); break;
+                    default: this.log.error("Not found"); break;
+                }
+            }
+            switch(protocoll.Read.Adresses[adressPosition].Datatype){
+                case 1: return puffer[0];
+                case 2: return puffer[0];
+                case 3: return this.conversionUint32(puffer); 
+                case 4: return this.conversionUint32(puffer);
+                default: this.log.error("Not found"); return -1000;
+            }            
         }
         catch(e: any){
-            this.log.error(String(e.message));
+           // this.log.error(String(e.message));
             return -1;
         }
     }
@@ -78,7 +114,7 @@ class WrGoodweMt extends utils.Adapter {
                     native: {},
                 });
                 await this.client.setID(id);
-                const val = await this.read(protocoll.Read.Adresses[i].Register[0]);
+                const val = await this.read(protocoll.Read.Adresses[i].Register, i);
                 await this.setState('WR'+id+'.'+protocoll.Read.Adresses[i].Name, val*protocoll.Read.Adresses[i].Factor);
             }
             return 1;

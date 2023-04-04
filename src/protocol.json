@@ -59,10 +59,10 @@
             "Factor": 0.1
         },
         {
-            "Register": [781],
+            "Register": [854,781],
             "Name": "Power",
             "Unit": "W",
-            "Datatype": 1,
+            "Datatype": 3,
             "Factor": 1
         },
         {
@@ -76,8 +76,8 @@
             "Register": [786,787],
             "Name": "Energy_total",
             "Unit": "kWh",
-            "Datatype": 1,
-            "Factor": 1
+            "Datatype": 3,
+            "Factor": 0.1
         }
     ]
 },
