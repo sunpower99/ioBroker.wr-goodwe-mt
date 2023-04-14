@@ -19,7 +19,7 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var utils = __toESM(require("@iobroker/adapter-core"));
 var import_modbus_serial = __toESM(require("modbus-serial"));
-var protocoll = __toESM(require("/home/pi/ioBroker.wr-goodwe-mt/src/protocol.json"));
+var import_protocol = require("./protocol");
 class WrGoodweMt extends utils.Adapter {
   constructor(options = {}) {
     super({
@@ -46,7 +46,7 @@ class WrGoodweMt extends utils.Adapter {
       this.ids[i - this.config.startID] = i;
       try {
         await this.client.setID(i);
-        const val = await this.client.readHoldingRegisters(protocoll.Read.Adresses[0].Register[0], protocoll.Read.Adresses[0].Register.length);
+        const val = await this.client.readHoldingRegisters(import_protocol.protocol.Read.Adresses[0].Register[0], import_protocol.protocol.Read.Adresses[0].Register.length);
         this.log.error(String(val.buffer));
         this.iList.set(i, String(val.buffer));
         if (val.buffer != void 0) {
@@ -91,7 +91,7 @@ class WrGoodweMt extends utils.Adapter {
       var puffer = [];
       for (var i = 0; i < register.length; i++) {
         const val = await this.client.readHoldingRegisters(register[i], 1);
-        switch (protocoll.Read.Adresses[adressPosition].Datatype) {
+        switch (import_protocol.protocol.Read.Adresses[adressPosition].Datatype) {
           case 1:
             puffer[i] = Buffer.from([val.buffer[0], val.buffer[1]]).readUint16BE(0);
             break;
@@ -111,7 +111,7 @@ class WrGoodweMt extends utils.Adapter {
             break;
         }
       }
-      switch (protocoll.Read.Adresses[adressPosition].Datatype) {
+      switch (import_protocol.protocol.Read.Adresses[adressPosition].Datatype) {
         case 1:
           return puffer[0];
         case 2:
@@ -132,23 +132,23 @@ class WrGoodweMt extends utils.Adapter {
   async startComm() {
     const metersIdList = this.ids;
     const getMeterValue = async (id) => {
-      for (let i = 1; i < protocoll.Read.Adresses.length; i++) {
+      for (let i = 1; i < import_protocol.protocol.Read.Adresses.length; i++) {
         if (this.iList.get(id) != void 0) {
-          await this.setObjectNotExistsAsync(this.iList.get(id) + "." + protocoll.Read.Adresses[i].Name, {
+          await this.setObjectNotExistsAsync(this.iList.get(id) + "." + import_protocol.protocol.Read.Adresses[i].Name, {
             type: "state",
             common: {
-              name: protocoll.Read.Adresses[i].Name,
+              name: import_protocol.protocol.Read.Adresses[i].Name,
               type: "number",
               role: "indicator",
               read: true,
-              unit: protocoll.Read.Adresses[i].Unit,
+              unit: import_protocol.protocol.Read.Adresses[i].Unit,
               write: true
             },
             native: {}
           });
           await this.client.setID(id);
-          const val = await this.read(protocoll.Read.Adresses[i].Register, i);
-          await this.setState(String(this.iList.get(id)) + "." + protocoll.Read.Adresses[i].Name, val * protocoll.Read.Adresses[i].Factor);
+          const val = await this.read(import_protocol.protocol.Read.Adresses[i].Register, i);
+          await this.setState(String(this.iList.get(id)) + "." + import_protocol.protocol.Read.Adresses[i].Name, val * import_protocol.protocol.Read.Adresses[i].Factor);
         }
       }
       await this.limitPower();
@@ -176,7 +176,7 @@ class WrGoodweMt extends utils.Adapter {
     this.getState("Limitation", async (err, state) => {
       if (typeof (state == null ? void 0 : state.val) === "number") {
         try {
-          await this.client.writeRegisters(protocoll.Write.Adresses[0].Register[0], [state == null ? void 0 : state.val]);
+          await this.client.writeRegisters(import_protocol.protocol.Write.Adresses[0].Register[0], [state == null ? void 0 : state.val]);
         } catch (e) {
         }
       }

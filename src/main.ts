@@ -4,8 +4,7 @@
 
 import * as utils from '@iobroker/adapter-core';
 import ModbusRTU from 'modbus-serial';
-import * as protocoll from '/home/pi/ioBroker.wr-goodwe-mt/src/protocol.json';
-import { inherits } from 'util';
+import {protocol} from './protocol';
 
 class WrGoodweMt extends utils.Adapter {
     private client = new ModbusRTU();
@@ -37,7 +36,7 @@ class WrGoodweMt extends utils.Adapter {
             this.ids[i-this.config.startID] = i;
             try{
                 await this.client.setID(i);
-                const val =  await this.client.readHoldingRegisters(protocoll.Read.Adresses[0].Register[0], protocoll.Read.Adresses[0].Register.length);
+                const val =  await this.client.readHoldingRegisters(protocol.Read.Adresses[0].Register[0], protocol.Read.Adresses[0].Register.length);
                 this.log.error(String(val.buffer));
                 this.iList.set(i,String(val.buffer));
                 if(val.buffer!=undefined){
@@ -87,7 +86,7 @@ class WrGoodweMt extends utils.Adapter {
 
             for(var i = 0; i < register.length; i++){
                 const val =  await this.client.readHoldingRegisters(register[i], 1);
-                switch(protocoll.Read.Adresses[adressPosition].Datatype){
+                switch(protocol.Read.Adresses[adressPosition].Datatype){
                     case 1: puffer[i] = Buffer.from([val.buffer[0],val.buffer[1]]).readUint16BE(0); break;
                     case 2: puffer[i] = Buffer.from([val.buffer[0],val.buffer[1]]).readInt16BE(0);break;
                     case 3: puffer[2*i] =  Buffer.from([(val.buffer[0])]).readUInt8(); puffer[2*i+1] =  Buffer.from([(val.buffer[1])]).readUInt8(); break; 
@@ -95,7 +94,7 @@ class WrGoodweMt extends utils.Adapter {
                     default: this.log.error("Not found"); break;
                 }
             }
-            switch(protocoll.Read.Adresses[adressPosition].Datatype){
+            switch(protocol.Read.Adresses[adressPosition].Datatype){
                 case 1: return puffer[0];
                 case 2: return puffer[0];
                 case 3: return this.conversionUint32(puffer); 
@@ -113,23 +112,23 @@ class WrGoodweMt extends utils.Adapter {
         const metersIdList = this.ids;
         const getMeterValue = async (id:number) => {
             //await this.sleep(100);
-            for(let i = 1; i < protocoll.Read.Adresses.length; i++){
+            for(let i = 1; i < protocol.Read.Adresses.length; i++){
                 if(this.iList.get(id)!= undefined){
-                    await this.setObjectNotExistsAsync(this.iList.get(id)+'.'+protocoll.Read.Adresses[i].Name, {
+                    await this.setObjectNotExistsAsync(this.iList.get(id)+'.'+protocol.Read.Adresses[i].Name, {
                         type: 'state',
                         common: {
-                            name: protocoll.Read.Adresses[i].Name,
+                            name: protocol.Read.Adresses[i].Name,
                             type: 'number',
                             role: 'indicator',
                             read: true,
-                            unit: protocoll.Read.Adresses[i].Unit,
+                            unit: protocol.Read.Adresses[i].Unit,
                             write: true,
                         },
                         native: {},
                     });
                     await this.client.setID(id);
-                    const val = await this.read(protocoll.Read.Adresses[i].Register, i);
-                    await this.setState(String(this.iList.get(id))+'.'+protocoll.Read.Adresses[i].Name, val*protocoll.Read.Adresses[i].Factor);
+                    const val = await this.read(protocol.Read.Adresses[i].Register, i);
+                    await this.setState(String(this.iList.get(id))+'.'+protocol.Read.Adresses[i].Name, val*protocol.Read.Adresses[i].Factor);
                 }
             }
             await this.limitPower();
@@ -161,7 +160,7 @@ class WrGoodweMt extends utils.Adapter {
         this.getState('Limitation',  async (err, state) => {
             if(typeof state?.val === 'number'){
                 try{
-                    await this.client.writeRegisters(protocoll.Write.Adresses[0].Register[0],[state?.val]);
+                    await this.client.writeRegisters(protocol.Write.Adresses[0].Register[0],[state?.val]);
                 }
                 catch(e:any){
 

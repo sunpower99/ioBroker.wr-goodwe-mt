@@ -5,10 +5,10 @@
 		"allowJs": false,
 		"checkJs": false,
 		"noEmit": false,
-		"declaration": false
+		"declaration": false,
 	},
 	"include": [
-		"src/**/*.ts"
+		"src/**/*.ts",
 	],
 	"exclude": [
 		"src/**/*.test.ts"

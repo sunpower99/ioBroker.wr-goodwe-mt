@@ -1,4 +1,4 @@
-{
+export const protocol ={
     "Read":{
     "Code": 3,
     "Adresses":[
@@ -100,4 +100,4 @@
         }
     ]
 }
-}
+};

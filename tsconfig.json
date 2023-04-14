@@ -11,14 +11,15 @@
 		// check JS files, but do not compile them => tsconfig.build.json
 		"allowJs": true,
 		"checkJs": true,
-
 		"noEmitOnError": true,
 		"outDir": "./build/",
 		"removeComments": false,
-
+		"module": "commonjs",
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"preserveSymlinks": true,
 		// This is necessary for the automatic typing of the adapter config
 		"resolveJsonModule": true,
-
 		// If you want to disable the stricter type checks (not recommended), uncomment the following line
 		// "strict": false,
 		// And enable some of those features for more fine-grained control
@@ -35,7 +36,10 @@
 		"inlineSourceMap": false
 	},
 	"include": [
-		"src/**/*.ts"
+		"src/**/*.ts",
+		"src/*.json",
+		"admin/**/*.ts",
+		"admin/**/*.tsx"
 	],
 	"exclude": [
 		"build/**",
