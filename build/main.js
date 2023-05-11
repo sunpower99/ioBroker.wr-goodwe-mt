@@ -63,10 +63,10 @@ class WrGoodweMt extends utils.Adapter {
       }
     }
     await this.startComm();
-    await this.setObjectNotExistsAsync("Limitation", {
+    await this.setObjectNotExistsAsync("DC_Power_Limitation", {
       type: "state",
       common: {
-        name: "Limitation",
+        name: "DC_Power_Limitation",
         type: "number",
         role: "indicator",
         read: true,
@@ -75,6 +75,20 @@ class WrGoodweMt extends utils.Adapter {
       },
       native: {}
     });
+    await this.setState("DC_Power_Limitation", 100);
+    await this.setObjectNotExistsAsync("Plant_ID", {
+      type: "state",
+      common: {
+        name: "Plant_ID",
+        type: "string",
+        role: "indicator",
+        read: true,
+        unit: "",
+        write: true
+      },
+      native: {}
+    });
+    await this.setState("Plant_ID", this.config.plantID);
   }
   conversionUint32(arr) {
     let uint8bytes = Uint8Array.from(arr);
@@ -148,7 +162,9 @@ class WrGoodweMt extends utils.Adapter {
           });
           await this.client.setID(id);
           const val = await this.read(import_protocol.protocol.Read.Adresses[i].Register, i);
-          await this.setState(String(this.iList.get(id)) + "." + import_protocol.protocol.Read.Adresses[i].Name, val * import_protocol.protocol.Read.Adresses[i].Factor);
+          if (val != -1) {
+            await this.setState(String(this.iList.get(id)) + "." + import_protocol.protocol.Read.Adresses[i].Name, val * import_protocol.protocol.Read.Adresses[i].Factor);
+          }
         }
       }
       await this.limitPower();
@@ -173,7 +189,7 @@ class WrGoodweMt extends utils.Adapter {
     getMetersValue(metersIdList);
   }
   async limitPower() {
-    this.getState("Limitation", async (err, state) => {
+    this.getState("DC_Power_Limitation", async (err, state) => {
       if (typeof (state == null ? void 0 : state.val) === "number") {
         try {
           await this.client.writeRegisters(import_protocol.protocol.Write.Adresses[0].Register[0], [state == null ? void 0 : state.val]);

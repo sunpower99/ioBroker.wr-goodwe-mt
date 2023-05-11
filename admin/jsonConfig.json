@@ -14,6 +14,14 @@
                     "hidden": "data.myType === 1", 
                     "disabled": "data.myType === 2" 
                 },
+                "plantID": {
+                    "type": "text",
+                    "label": "Plant ID",
+                    "sm": 12, 
+                    "validator": "data.name",
+                    "hidden": "data.myType === 1", 
+                    "disabled": "data.myType === 2" 
+                },
                 "startID": {
                     "type": "number",
                     "min": 1,

@@ -5,6 +5,7 @@ declare global {
 	namespace ioBroker {
 		interface AdapterConfig {
 			Interface: string;
+			plantID: string;
             startID: number;
             endID: number;
 		}

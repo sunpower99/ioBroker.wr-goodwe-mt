@@ -80,6 +80,7 @@
 	},
 	"native": {
         "Interface":"/dev/ttyUSB0",
+		"plantID":"AnlagenName",
         "startID": 2,
         "endID": 3
     },

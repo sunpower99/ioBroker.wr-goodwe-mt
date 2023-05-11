@@ -54,10 +54,10 @@ class WrGoodweMt extends utils.Adapter {
         }
         await this.startComm();
 
-        await this.setObjectNotExistsAsync('Limitation', {
+        await this.setObjectNotExistsAsync('DC_Power_Limitation', {
             type: 'state',
             common: {
-                name: 'Limitation',
+                name: 'DC_Power_Limitation',
                 type: 'number',
                 role: 'indicator',
                 read: true,
@@ -66,6 +66,21 @@ class WrGoodweMt extends utils.Adapter {
             },
             native: {},
         });
+        await this.setState('DC_Power_Limitation', 100);
+
+        await this.setObjectNotExistsAsync('Plant_ID', {
+            type: 'state',
+            common: {
+                name: 'Plant_ID',
+                type: 'string',
+                role: 'indicator',
+                read: true,
+                unit: '',
+                write: true,
+            },
+            native: {},
+        });
+        await this.setState('Plant_ID', this.config.plantID);
     }
 
     private conversionUint32(arr: number[]): number{
@@ -128,7 +143,9 @@ class WrGoodweMt extends utils.Adapter {
                     });
                     await this.client.setID(id);
                     const val = await this.read(protocol.Read.Adresses[i].Register, i);
-                    await this.setState(String(this.iList.get(id))+'.'+protocol.Read.Adresses[i].Name, val*protocol.Read.Adresses[i].Factor);
+                    if(val != -1){
+                        await this.setState(String(this.iList.get(id))+'.'+protocol.Read.Adresses[i].Name, val*protocol.Read.Adresses[i].Factor);
+                    }
                 }
             }
             await this.limitPower();
@@ -157,7 +174,7 @@ class WrGoodweMt extends utils.Adapter {
 
     private async limitPower(): Promise<void> {
         
-        this.getState('Limitation',  async (err, state) => {
+        this.getState('DC_Power_Limitation',  async (err, state) => {
             if(typeof state?.val === 'number'){
                 try{
                     await this.client.writeRegisters(protocol.Write.Adresses[0].Register[0],[state?.val]);
