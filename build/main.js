@@ -40,7 +40,7 @@ class WrGoodweMt extends utils.Adapter {
     this.log.debug("End ID:" + String(this.config.endID));
     this.setState("info.connection", false, true);
     this.client.connectRTUBuffered(this.config.Interface, { baudRate: 9600, parity: "none", dataBits: 8, stopBits: 1 });
-    await this.client.setTimeout(1e3);
+    await this.client.setTimeout(1e4);
     await this.sleep(2e3);
     for (var i = this.config.startID; i <= this.config.endID; i++) {
       this.ids[i - this.config.startID] = i;
@@ -63,19 +63,22 @@ class WrGoodweMt extends utils.Adapter {
       }
     }
     await this.startComm();
-    await this.setObjectNotExistsAsync("DC_Power_Limitation", {
-      type: "state",
-      common: {
-        name: "DC_Power_Limitation",
-        type: "number",
-        role: "indicator",
-        read: true,
-        unit: "%",
-        write: true
-      },
-      native: {}
-    });
-    await this.setState("DC_Power_Limitation", 100);
+    let objects = ["DC_Power_Limitation_DirectMarketer", "DC_Power_Limitation_GridOperator", "DC_Power_Limitation_GP_Protection"];
+    for (let i2 = 0; i2 < objects.length; i2++) {
+      await this.setObjectNotExistsAsync(objects[i2], {
+        type: "state",
+        common: {
+          name: objects[i2],
+          type: "number",
+          role: "indicator",
+          read: true,
+          unit: "%",
+          write: true
+        },
+        native: {}
+      });
+      await this.setState(objects[i2], 100);
+    }
     await this.setObjectNotExistsAsync("Plant_ID", {
       type: "state",
       common: {
@@ -189,14 +192,24 @@ class WrGoodweMt extends utils.Adapter {
     getMetersValue(metersIdList);
   }
   async limitPower() {
-    this.getState("DC_Power_Limitation", async (err, state) => {
-      if (typeof (state == null ? void 0 : state.val) === "number") {
-        try {
-          await this.client.writeRegisters(import_protocol.protocol.Write.Adresses[0].Register[0], [state == null ? void 0 : state.val]);
-        } catch (e) {
+    let objects = ["DC_Power_Limitation_DirectMarketer", "DC_Power_Limitation_GridOperator", "DC_Power_Limitation_GP_Protection"];
+    let min = 100;
+    for (let i = 0; i < objects.length; i++) {
+      this.getState(objects[i], async (err, state) => {
+        if (typeof (state == null ? void 0 : state.val) === "number") {
+          try {
+            this.log.info(objects[i] + (state == null ? void 0 : state.val));
+            if ((state == null ? void 0 : state.val) < min) {
+              this.log.debug("hier");
+              min = state == null ? void 0 : state.val;
+              this.log.debug(String(min));
+            }
+          } catch (e) {
+          }
         }
-      }
-    });
+      });
+    }
+    await this.client.writeRegisters(import_protocol.protocol.Write.Adresses[0].Register[0], [min]);
     await this.sleep(1e3);
   }
   async onUnload(callback) {

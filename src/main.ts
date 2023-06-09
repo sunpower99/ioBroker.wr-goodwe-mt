@@ -30,7 +30,7 @@ class WrGoodweMt extends utils.Adapter {
         this.setState('info.connection', false, true);
 
         this.client.connectRTUBuffered(this.config.Interface, { baudRate: 9600 , parity: 'none', dataBits: 8, stopBits: 1, });
-        await this.client.setTimeout(1000);
+        await this.client.setTimeout(10000);
         await this.sleep(2000);
         for(var i = this.config.startID; i <=this.config.endID; i++){
             this.ids[i-this.config.startID] = i;
@@ -54,19 +54,23 @@ class WrGoodweMt extends utils.Adapter {
         }
         await this.startComm();
 
-        await this.setObjectNotExistsAsync('DC_Power_Limitation', {
-            type: 'state',
-            common: {
-                name: 'DC_Power_Limitation',
-                type: 'number',
-                role: 'indicator',
-                read: true,
-                unit: '%',
-                write: true,
-            },
-            native: {},
-        });
-        await this.setState('DC_Power_Limitation', 100);
+        let objects = ['DC_Power_Limitation_DirectMarketer', 'DC_Power_Limitation_GridOperator', 'DC_Power_Limitation_GP_Protection']
+
+        for(let i = 0; i < objects.length; i++){
+            await this.setObjectNotExistsAsync(objects[i], {
+                type: 'state',
+                common: {
+                    name: objects[i],
+                    type: 'number',
+                    role: 'indicator',
+                    read: true,
+                    unit: '%',
+                    write: true,
+                },
+                native: {},
+            });
+            await this.setState(objects[i], 100);
+        }
 
         await this.setObjectNotExistsAsync('Plant_ID', {
             type: 'state',
@@ -173,17 +177,27 @@ class WrGoodweMt extends utils.Adapter {
     }
 
     private async limitPower(): Promise<void> {
-        
-        this.getState('DC_Power_Limitation',  async (err, state) => {
+
+        let objects = ['DC_Power_Limitation_DirectMarketer', 'DC_Power_Limitation_GridOperator', 'DC_Power_Limitation_GP_Protection']
+        let min = 100;
+        for(let i = 0; i < objects.length; i++){
+        this.getState(objects[i],  async (err, state) => {
             if(typeof state?.val === 'number'){
                 try{
-                    await this.client.writeRegisters(protocol.Write.Adresses[0].Register[0],[state?.val]);
+                    this.log.info(objects[i]+ state?.val)
+                    if(state?.val<min){
+                        this.log.debug("hier")
+                        min = state?.val;
+                        this.log.debug(String(min));
+                    }
                 }
                 catch(e:any){
 
                 }
             }
         });
+        }
+        await this.client.writeRegisters(protocol.Write.Adresses[0].Register[0],[min]);
         await this.sleep(1000);
     }
 
