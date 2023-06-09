@@ -79,6 +79,19 @@ class WrGoodweMt extends utils.Adapter {
       });
       await this.setState(objects[i2], 100);
     }
+    await this.setObjectNotExistsAsync("Reactive_Power_Limitation_GridOperator", {
+      type: "state",
+      common: {
+        name: objects[i],
+        type: "number",
+        role: "indicator",
+        read: true,
+        unit: "%",
+        write: true
+      },
+      native: {}
+    });
+    await this.setState("Reactive_Power_Limitation_GridOperator", 0);
     await this.setObjectNotExistsAsync("Plant_ID", {
       type: "state",
       common: {
@@ -170,7 +183,7 @@ class WrGoodweMt extends utils.Adapter {
           }
         }
       }
-      await this.limitPower();
+      await this.limit_DC_Power();
     };
     const getMetersValue = async (meters) => {
       try {
@@ -191,18 +204,15 @@ class WrGoodweMt extends utils.Adapter {
     };
     getMetersValue(metersIdList);
   }
-  async limitPower() {
+  async limit_DC_Power() {
     let objects = ["DC_Power_Limitation_DirectMarketer", "DC_Power_Limitation_GridOperator", "DC_Power_Limitation_GP_Protection"];
     let min = 100;
     for (let i = 0; i < objects.length; i++) {
       this.getState(objects[i], async (err, state) => {
         if (typeof (state == null ? void 0 : state.val) === "number") {
           try {
-            this.log.info(objects[i] + (state == null ? void 0 : state.val));
             if ((state == null ? void 0 : state.val) < min) {
-              this.log.debug("hier");
               min = state == null ? void 0 : state.val;
-              this.log.debug(String(min));
             }
           } catch (e) {
           }
@@ -211,6 +221,20 @@ class WrGoodweMt extends utils.Adapter {
     }
     await this.client.writeRegisters(import_protocol.protocol.Write.Adresses[0].Register[0], [min]);
     await this.sleep(1e3);
+  }
+  async limit_Reactive_Power() {
+    let objects = ["Reactive_Power_Limitation_GridOperator"];
+    for (let i = 0; i < objects.length; i++) {
+      this.getState(objects[i], async (err, state) => {
+        if (typeof (state == null ? void 0 : state.val) === "number") {
+          try {
+            await this.client.writeRegisters(import_protocol.protocol.Write.Adresses[0].Register[1], [state == null ? void 0 : state.val]);
+            await this.sleep(1e3);
+          } catch (e) {
+          }
+        }
+      });
+    }
   }
   async onUnload(callback) {
     try {

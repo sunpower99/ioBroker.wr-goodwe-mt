@@ -93,7 +93,14 @@ export const protocol ={
     "Adresses":[
         {
             "Register": [256],
-            "Name": "Limitation",
+            "Name": "DC_Limitation",
+            "Unit": "%",
+            "Datatype": 2,
+            "Factor": 1
+        },
+        {
+            "Register": [257],
+            "Name": "Reactive_Limitation",
             "Unit": "%",
             "Datatype": 2,
             "Factor": 1

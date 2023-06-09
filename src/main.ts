@@ -72,6 +72,20 @@ class WrGoodweMt extends utils.Adapter {
             await this.setState(objects[i], 100);
         }
 
+        await this.setObjectNotExistsAsync('Reactive_Power_Limitation_GridOperator', {
+            type: 'state',
+            common: {
+                name: objects[i],
+                type: 'number',
+                role: 'indicator',
+                read: true,
+                unit: '%',
+                write: true,
+            },
+            native: {},
+        });
+        await this.setState('Reactive_Power_Limitation_GridOperator', 0);
+
         await this.setObjectNotExistsAsync('Plant_ID', {
             type: 'state',
             common: {
@@ -152,7 +166,7 @@ class WrGoodweMt extends utils.Adapter {
                     }
                 }
             }
-            await this.limitPower();
+            await this.limit_DC_Power();
         }
 
         const getMetersValue = async (meters:any) => {
@@ -176,7 +190,7 @@ class WrGoodweMt extends utils.Adapter {
         getMetersValue(metersIdList);
     }
 
-    private async limitPower(): Promise<void> {
+    private async limit_DC_Power(): Promise<void> {
 
         let objects = ['DC_Power_Limitation_DirectMarketer', 'DC_Power_Limitation_GridOperator', 'DC_Power_Limitation_GP_Protection']
         let min = 100;
@@ -184,11 +198,8 @@ class WrGoodweMt extends utils.Adapter {
         this.getState(objects[i],  async (err, state) => {
             if(typeof state?.val === 'number'){
                 try{
-                    this.log.info(objects[i]+ state?.val)
                     if(state?.val<min){
-                        this.log.debug("hier")
                         min = state?.val;
-                        this.log.debug(String(min));
                     }
                 }
                 catch(e:any){
@@ -199,6 +210,25 @@ class WrGoodweMt extends utils.Adapter {
         }
         await this.client.writeRegisters(protocol.Write.Adresses[0].Register[0],[min]);
         await this.sleep(1000);
+    }
+
+    //prepared but not active
+    private async limit_Reactive_Power(): Promise<void> {
+
+        let objects = ['Reactive_Power_Limitation_GridOperator']
+        for(let i = 0; i < objects.length; i++){
+        this.getState(objects[i],  async (err, state) => {
+            if(typeof state?.val === 'number'){
+                try{
+                    await this.client.writeRegisters(protocol.Write.Adresses[0].Register[1],[state?.val]);
+                    await this.sleep(1000);
+                }
+                catch(e:any){
+
+                }
+            }
+        });
+        }
     }
 
     private async onUnload(callback: () => void): Promise<void> {
